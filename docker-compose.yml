@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  blender:
+    image: ubuntu:22.04
+    container_name: blender-mcp-blender
+    environment:
+      - DISPLAY=:99
+    volumes:
+      - ./blender_addon:/root/.config/blender/4.2/scripts/addons/blender_mcp
+      - blender_data:/root/.config/blender
+    command: >
+      bash -c "
+        apt-get update && apt-get install -y xvfb wget libgl1-mesa-glx &&
+        wget -q https://download.blender.org/release/Blender4.2/blender-4.2.3-linux-x64.tar.xz -O /tmp/blender.tar.xz &&
+        tar -xf /tmp/blender.tar.xz -C /opt &&
+        mv /opt/blender-* /opt/blender &&
+        ln -sf /opt/blender/blender /usr/local/bin/blender &&
+        Xvfb :99 -screen 0 1024x768x24 &
+        sleep 2 &&
+        blender -b --python-expr \"import bpy; bpy.ops.wm.addon_enable(module='blender_mcp'); bpy.ops.blender_mcp.start_server()\" 
+      "
+    ports:
+      - "9876:9876"
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: blender-mcp-server
+    environment:
+      - BLENDER_HOST=blender
+      - BLENDER_PORT=9876
+    ports:
+      - "8080:8080"
+    depends_on:
+      - blender
+    restart: unless-stopped
+
+volumes:
+  blender_data:

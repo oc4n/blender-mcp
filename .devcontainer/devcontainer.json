@@ -1,0 +1,25 @@
+{
+  "name": "Blender MCP",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python"]
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "forwardPorts": [9876, 8080],
+  "portsAttributes": {
+    "9876": {
+      "label": "Blender MCP Addon",
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "MCP Server (if HTTP)",
+      "onAutoForward": "notify"
+    }
+  },
+  "runArgs": ["--cap-add=SYS_ADMIN", "--security-opt", "apparmor:unconfined"]
+}
